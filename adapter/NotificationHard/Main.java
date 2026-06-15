@@ -2,7 +2,7 @@ package adapter.NotificationHard;
 
 
 interface Notification{
-  void send()
+  void send();
 }
 // আমাদের অ্যাপের নিজস্ব নোটিফিকেশন সিস্টেম (যা শুধু ইমেইল পাঠাতে পারে)
 class CoreNotification {

@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mediator Pattern (বাংলায়) - Behavioral Design Pattern</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --accent-color: #38bdf8;
+            --text-color: #e2e8f0;
+            --text-muted: #94a3b8;
+            --code-bg: #0b0f19;
+            --border-color: #334155;
+            --success-color: #4ade80;
+            --error-color: #f87171;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            border-bottom: 1px solid var(--border-color);
+            padding-bottom: 30px;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+
+        h2 {
+            color: var(--accent-color);
+            font-size: 1.8rem;
+            margin-top: 40px;
+            border-left: 4px solid var(--accent-color);
+            padding-left: 15px;
+        }
+
+        h3 {
+            color: #f1f5f9;
+            font-size: 1.3rem;
+            margin-top: 25px;
+        }
+
+        p {
+            margin-bottom: 20px;
+        }
+
+        ul {
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        /* Comparison Box */
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        @media (max-width: 600px) {
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .box {
+            background-color: var(--card-bg);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        .box.bad {
+            border-top: 4px solid var(--error-color);
+        }
+
+        .box.good {
+            border-top: 4px solid var(--success-color);
+        }
+
+        .box h4 {
+            margin-top: 0;
+            font-size: 1.1rem;
+        }
+
+        /* Diagram Mockup */
+        .diagram-box {
+            background: var(--code-bg);
+            border: 1px dashed var(--accent-color);
+            border-radius: 8px;
+            padding: 20px;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+            color: #a7f3d0;
+            margin: 20px 0;
+            line-height: 1.4;
+        }
+
+        /* Code Block Wrapper with Copy Button */
+        .code-wrapper {
+            position: relative;
+            margin: 20px 0;
+        }
+
+        .copy-btn {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid var(--border-color);
+            color: var(--text-color);
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-color);
+            color: #000;
+            border-color: var(--accent-color);
+        }
+
+        pre {
+            background-color: var(--code-bg);
+            padding: 24px 20px 20px 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            border: 1px solid var(--border-color);
+            margin: 0;
+        }
+
+        code {
+            font-family: 'Consolas', 'Courier New', Courier, monospace;
+            font-size: 0.95rem;
+            color: #e2e8f0;
+        }
+
+        .keyword { color: #f472b6; }
+        .class-name { color: #4ade80; }
+        .method { color: #38bdf8; }
+        .string { color: #fb923c; }
+
+        /* Output Box */
+        .output-box {
+            background-color: #1e293b;
+            border-left: 4px solid var(--success-color);
+            padding: 15px 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .output-box h4 {
+            margin: 0 0 10px 0;
+            color: var(--success-color);
+        }
+
+        /* Trick Box */
+        .trick-box {
+            background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            border: 1px solid var(--accent-color);
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 50px;
+            box-shadow: 0 4px 20px rgba(56, 189, 248, 0.1);
+        }
+
+        .trick-box h3 {
+            margin-top: 0;
+            color: var(--accent-color);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Mediator Pattern (বাংলায়)</h1>
+            <div class="subtitle">একটি Behavioral Design Pattern</div>
+        </header>
+
+        <section>
+            <p>যখন অনেক <strong>object</strong> একে অপরের সাথে directly communicate করে এবং code খুব জটিল হয়ে যায়, তখন একটি <strong>Mediator object</strong> ব্যবহার করা হয়।</p>
+            <p>সব object নিজেদের মধ্যে সরাসরি কথা না বলে Mediator-এর মাধ্যমে যোগাযোগ করে。</p>
+        </section>
+
+        <section>
+            <h2>Real Life Example</h2>
+            <h3>Air Traffic Control (ATC)</h3>
+            <p>একটি Airport-এ অনেক Plane আছে।</p>
+
+            <div class="comparison-container">
+                <div class="box bad">
+                    <h4>❌ Plane গুলো যদি একে অপরের সাথে directly communicate করে:</h4>
+                    <p>Plane A &lt;--&gt; Plane B<br>
+                    Plane A &lt;--&gt; Plane C<br>
+                    Plane B &lt;--&gt; Plane C</p>
+                    <p><small style="color: var(--error-color);">যোগাযোগ ব্যবস্থা খুব জটিল হয়ে যাবে।</small></p>
+                </div>
+                <div class="box good">
+                    <h4>✔ সব Plane ATC Tower-এর সাথে communicate করে:</h4>
+                    <p>Plane A --&gt; ATC<br>
+                    Plane B --&gt; ATC<br>
+                    Plane C --&gt; ATC</p>
+                    <p><strong>ATC = Mediator</strong></p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2>Messy Code (Without Mediator)</h2>
+            <p>ধরি একটি Chat System আছে।</p>
+
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre><code><span class="keyword">class</span> <span class="class-name">User</span> {
+    <span class="keyword">private</span> <span class="class-name">String</span> name;
+
+    <span class="keyword">public</span> <span class="class-name">User</span>(<span class="class-name">String</span> name) {
+        <span class="keyword">this</span>.name = name;
+    }
+
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">sendMessage</span>(<span class="class-name">User</span> user, <span class="class-name">String</span> message) {
+        <span class="class-name">System</span>.out.println(name + <span class="string">" sends to "</span> + user.name + <span class="string">": "</span> + message);
+    }
+}
+
+<span class="keyword">public</span> <span class="keyword">class</span> <span class="class-name">Main</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="class-name">String</span>[] args) {
+        <span class="class-name">User</span> omor = <span class="keyword">new</span> <span class="class-name">User</span>(<span class="string">"Omor"</span>);
+        <span class="class-name">User</span> rahim = <span class="keyword">new</span> <span class="class-name">User</span>(<span class="string">"Rahim"</span>);
+        <span class="class-name">User</span> karim = <span class="keyword">new</span> <span class="class-name">User</span>(<span class="string">"Karim"</span>);
+
+        omor.sendMessage(rahim, <span class="string">"Hello"</span>);
+        omor.sendMessage(karim, <span class="string">"Hi"</span>);
+        rahim.sendMessage(karim, <span class="string">"How are you?"</span>);
+    }
+}</code></pre>
+            </div>
+
+            <h3>Problems</h3>
+            <ul>
+                <li>User একে অপরকে directly জানে</li>
+                <li>Coupling বেশি</li>
+                <li>User সংখ্যা বাড়লে communication complex হবে</li>
+                <li>Group chat implement করা কঠিন</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Mediator Pattern Solution</h2>
+            
+            <h3>Mediator Interface</h3>
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre><code><span class="keyword">interface</span> <span class="class-name">ChatMediator</span> {
+    <span class="keyword">void</span> <span class="method">sendMessage</span>(<span class="class-name">String</span> message, <span class="class-name">User</span> sender);
+    <span class="keyword">void</span> <span class="method">addUser</span>(<span class="class-name">User</span> user);
+}</code></pre>
+            </div>
+
+            <h3>Concrete Mediator</h3>
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre><code><span class="keyword">import</span> java.util.ArrayList;
+<span class="keyword">import</span> java.util.List;
+
+<span class="keyword">class</span> <span class="class-name">ChatRoom</span> <span class="keyword">implements</span> <span class="class-name">ChatMediator</span> {
+    <span class="keyword">private</span> <span class="class-name">List</span>&lt;<span class="class-name">User</span>&gt; users = <span class="keyword">new</span> <span class="class-name">ArrayList</span>&lt;&gt;();
+
+    <span class="keyword">@Override</span>
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">addUser</span>(<span class="class-name">User</span> user) {
+        users.add(user);
+    }
+
+    <span class="keyword">@Override</span>
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">sendMessage</span>(<span class="class-name">String</span> message, <span class="class-name">User</span> sender) {
+        <span class="keyword">for</span> (<span class="class-name">User</span> user : users) {
+            <span class="keyword">if</span> (user != sender) {
+                user.receive(message);
+            }
+        }
+    }
+}</code></pre>
+            </div>
+
+            <h3>User Class</h3>
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre><code><span class="keyword">class</span> <span class="class-name">User</span> {
+    <span class="keyword">private</span> <span class="class-name">String</span> name;
+    <span class="keyword">private</span> <span class="class-name">ChatMediator</span> mediator;
+
+    <span class="keyword">public</span> <span class="class-name">User</span>(<span class="class-name">String</span> name, <span class="class-name">ChatMediator</span> mediator) {
+        <span class="keyword">this</span>.name = name;
+        <span class="keyword">this</span>.mediator = mediator;
+    }
+
+    <span class="keyword">public</span> <span class="class-name">String</span> <span class="method">getName</span>() {
+        <span class="keyword">return</span> name;
+    }
+
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">send</span>(<span class="class-name">String</span> message) {
+        <span class="class-name">System</span>.out.println(name + <span class="string">" sends: "</span> + message);
+        mediator.sendMessage(message, <span class="keyword">this</span>);
+    }
+
+    <span class="keyword">public</span> <span class="keyword">void</span> <span class="method">receive</span>(<span class="class-name">String</span> message) {
+        <span class="class-name">System</span>.out.println(name + <span class="string">" received: "</span> + message);
+    }
+}</code></pre>
+            </div>
+
+            <h3>Main Class</h3>
+            <div class="code-wrapper">
+                <button class="copy-btn" onclick="copyCode(this)">Copy</button>
+<pre><code><span class="keyword">public</span> <span class="keyword">class</span> <span class="class-name">Main</span> {
+    <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="method">main</span>(<span class="class-name">String</span>[] args) {
+        <span class="class-name">ChatRoom</span> room = <span class="keyword">new</span> <span class="class-name">ChatRoom</span>();
+
+        <span class="class-name">User</span> omor = <span class="keyword">new</span> <span class="class-name">User</span>(<span class="string">"Omor"</span>, room);
+        <span class="class-name">User</span> rahim = <span class="keyword">new</span> <span class="class-name">User</span>(<span class="string">"Rahim"</span>, room);
+        <span class="class-name">User</span> karim = <span class="keyword">new</span> <span class="class-name">User</span>(<span class="string">"Karim"</span>, room);
+
+        room.addUser(omor);
+        room.addUser(rahim);
+        room.addUser(karim);
+
+        omor.send("Hello Everyone");
+    }
+}</code></pre>
+            </div>
+
+            <div class="output-box">
+                <h4>Output:</h4>
+                <code>
+                    Omor sends: Hello Everyone<br><br>
+                    Rahim received: Hello Everyone<br><br>
+                    Karim received: Hello Everyone
+                </code>
+            </div>
+        </section>
+
+        <section>
+            <h2>UML Diagram & Relations</h2>
+            
+            <div class="diagram-box">
++------------------+                  +----------------+
+|  ChatMediator    |&lt;-----------------|      User      |
++------------------+                  +----------------+
+| + sendMessage()  |                  | - mediator     |
+| + addUser()      |                  +----------------+
++------------------+                  | + send()       |
+        ^                             | + receive()    |
+        | (Implementation)            +----------------+
+        |                                     ^
++------------------+                          |
+|    ChatRoom      |                          |
++------------------+                          |
+| - users: List    |--------------------------+
++------------------+   (Aggregation: o--)
+| + sendMessage()  |
+| + addUser()      |
++------------------+</div>
+
+            <h3>Relation Types</h3>
+            <ul>
+                <li><strong>1. Implementation:</strong> <code>ChatRoom</code> implements <code>ChatMediator</code></li>
+                <li><strong>2. Association:</strong> <code>User --&gt; ChatMediator</code> (User mediator ব্যবহার করে)</li>
+                <li><strong>3. Aggregation:</strong> <code>ChatRoom o--&gt; User</code> (ChatRoom অনেক User maintain করে)</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>কখন ব্যবহার করবেন?</h2>
+            <ul>
+                <li>Chat Application</li>
+                <li>Air Traffic Control System</li>
+                <li>Smart Home Devices</li>
+                <li>GUI Components Communication</li>
+                <li>Online Meeting System</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Mediator Pattern-এর মূল ধারণা</h2>
+            <div class="comparison-container">
+                <div class="box">
+                    <h4>আগে (Before)</h4>
+                    User A &lt;--&gt; User B<br>
+                    User A &lt;--&gt; User C<br>
+                    User B &lt;--&gt; User C<br>
+                    <p><small style="color: var(--text-muted);">সবাই সবাইকে চিনে।</small></p>
+                </div>
+                <div class="box">
+                    <h4>পরে (After)</h4>
+                    User A --&gt; ChatRoom<br>
+                    User B --&gt; ChatRoom<br>
+                    User C --&gt; ChatRoom<br>
+                    <p><small style="color: var(--text-muted);">কেউ কাউকে directly চেনে না। সব communication Mediator-এর মাধ্যমে হয়।</small></p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="trick-box">
+            <h3>💡 মনে রাখার ট্রিক</h3>
+            <p><strong>Mediator Pattern = </strong>"সব object-এর মাঝে একজন মধ্যস্থতাকারী (Mediator) বসানো, যাতে object গুলো একে অপরের সাথে directly communicate না করে।"</p>
+        </footer>
+    </div>
+
+    <script>
+        function copyCode(button) {
+            const pre = button.nextElementSibling;
+            const code = pre.querySelector('code');
+            const text = code.innerText;
+
+            navigator.clipboard.writeText(text).then(() => {
+                button.innerText = "Copied!";
+                button.style.backgroundColor = "var(--success-color)";
+                button.style.color = "#000";
+
+                setTimeout(() => {
+                    button.innerText = "Copy";
+                    button.style.backgroundColor = "rgba(255, 255, 255, 0.1)";
+                    button.style.color = "var(--text-color)";
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                button.innerText = "Error";
+            });
+        }
+    </script>
+
+</body>
+</html>
